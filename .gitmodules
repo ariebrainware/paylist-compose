@@ -1,0 +1,6 @@
+[submodule "paylist"]
+	path = paylist
+	url = https://github.com/ariebrainware/paylist
+[submodule "paylist-api"]
+	path = paylist-api
+	url = https://github.com/ariebrainware/paylist-api
