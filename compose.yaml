@@ -1,0 +1,77 @@
+services:
+  paylist-api:
+    container_name: paylist-api
+    restart: always
+    build:
+      context: paylist-api
+      target: builder
+    volumes:
+      - ./paylist-api:/usr/src/app
+    secrets:
+      - paylist-api.env
+    networks:
+      - golang-mysql
+    depends_on:
+      - paylist-db
+    ports:
+      - 3003:3003
+    expose:
+      - 3003
+
+  paylist-db:
+    container_name: paylist-db
+    image: postgres:latest
+    environment: 
+        POSTGRES_USERNAME: postgres
+        POSTGRES_PASSWORD: ''
+        POSTGRES_DB: 'paylist'
+        POSTGRES_HOST_AUTH_METHOD: 'trust'
+    ports:
+        - 5432:5432
+    # The `volumes` tag allows us to share a folder with our container.
+    # Its syntax is as follows: [folder path on our machine]:[folder path to retrieve in the container]
+    volumes:
+      # In this example, we share the folder `db-data` in our root repository, with the default PostgreSQL data path.
+      # It means that every time the repository is modifying the data inside
+      # of `/var/lib/postgresql/data/`, automatically the change will appear in `db-data`.
+      # You don't need to create the `db-data` folder. Docker Compose will do it for you.
+      - ./db-data/:/var/lib/postgresql/data/
+
+  proxy:
+    container_name: proxy
+    image: nginx
+    volumes:
+      - type: bind
+        source: ./proxy/nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    networks:
+      - golang-mysql
+    ports:
+      - 3003:80
+    depends_on: 
+      - paylist-api
+
+  paylist:
+    container_name: paylist
+    image: paylist
+    build: ./paylist
+    restart: always
+    volumes:
+      - type: bind
+        source: ./paylist/nginx.conf
+        target: /etc/nginx/conf.d/default.conf
+        read_only: true
+    networks:
+      - golang-mysql
+    ports:
+      - 3113:80
+
+networks:
+  golang-mysql:
+  
+secrets:
+  paylist-api.env:
+    file: paylist-api/.env
+  # evo-shortner-app.env:
+  #   file: evo-shortner/app.env
