@@ -10,7 +10,7 @@ services:
     secrets:
       - paylist-api.env
     networks:
-      - golang-mysql
+      - golang-postgres
     depends_on:
       - paylist-db
     ports:
@@ -31,11 +31,11 @@ services:
     # The `volumes` tag allows us to share a folder with our container.
     # Its syntax is as follows: [folder path on our machine]:[folder path to retrieve in the container]
     volumes:
-      # In this example, we share the folder `db-data` in our root repository, with the default PostgreSQL data path.
+      # In this example, we share the folder `paylist-db` in our root repository, with the default PostgreSQL data path.
       # It means that every time the repository is modifying the data inside
-      # of `/var/lib/postgresql/data/`, automatically the change will appear in `db-data`.
-      # You don't need to create the `db-data` folder. Docker Compose will do it for you.
-      - ./db-data/:/var/lib/postgresql/data/
+      # of `/var/lib/postgresql/data/`, automatically the change will appear in `paylist-db`.
+      # You don't need to create the `paylist-db` folder. Docker Compose will do it for you.
+      - ./paylist-db/:/var/lib/postgresql/data/
 
   proxy:
     container_name: proxy
@@ -46,29 +46,29 @@ services:
         target: /etc/nginx/conf.d/default.conf
         read_only: true
     networks:
-      - golang-mysql
+      - golang-postgres
     ports:
       - 3003:80
     depends_on: 
       - paylist-api
 
-  paylist:
-    container_name: paylist
-    image: paylist
-    build: ./paylist
-    restart: always
-    volumes:
-      - type: bind
-        source: ./paylist/nginx.conf
-        target: /etc/nginx/conf.d/default.conf
-        read_only: true
-    networks:
-      - golang-mysql
-    ports:
-      - 3113:80
+  # paylist:
+  #   container_name: paylist
+  #   image: paylist
+  #   build: ./paylist
+  #   restart: always
+  #   volumes:
+  #     - type: bind
+  #       source: ./paylist/nginx.conf
+  #       target: /etc/nginx/conf.d/default.conf
+  #       read_only: true
+  #   networks:
+  #     - golang-postgres
+  #   ports:
+  #     - 3113:80
 
 networks:
-  golang-mysql:
+  golang-postgres:
   
 secrets:
   paylist-api.env:
